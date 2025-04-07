@@ -25,6 +25,10 @@
             "github:metr-systems/micropython-modbus/umodbus/serial.py"
         ],
         [
+            "umodbus/relay.py",
+            "github:metr-systems/micropython-modbus/umodbus/relay.py"
+        ],
+        [
             "umodbus/tcp.py",
             "github:metr-systems/micropython-modbus/umodbus/tcp.py"
         ],
