@@ -19,6 +19,7 @@ import time
 from . import functions
 from . import const as Const
 from .common import Request
+from . import relay
 
 # typing not natively supported on MicroPython
 from .typing import Callable, dict_keys, List, Optional, Union
@@ -36,6 +37,7 @@ class Modbus(object):
     def __init__(self, itf, addr_list: List[int]) -> None:
         self._itf = itf
         self._addr_list = addr_list
+        self._relay = None
 
         # modbus register types with their default value
         self._available_register_types = ['COILS', 'HREGS', 'IREGS', 'ISTS']
@@ -111,6 +113,12 @@ class Modbus(object):
 
         return True
 
+    def _get_relay_config(self, addr:int, reg_type:str) -> None:
+        if self._relay is None:
+            return None
+        else:
+            return self._relay.get_relay_register(addr, reg_type)
+
     def _create_response(self,
                          request: Request,
                          reg_type: str) -> Union[List[bool], List[int]]:
@@ -134,7 +142,14 @@ class Modbus(object):
 
         for addr in range(request.register_addr,
                           request.register_addr + request.quantity):
-            value = reg_dict.get(addr, default_value)['val']
+            
+            # checking if there are any relay configurations present
+            # if yes, receive data from remote register
+            rel = self._get_relay_config(addr, reg_type)
+            if rel is not None:
+                value = rel.request_data()
+            else:
+                value = reg_dict.get(addr, default_value)['val']
 
             if isinstance(value, (list, tuple)):
                 data.extend(value)
@@ -229,7 +244,12 @@ class Modbus(object):
                     ]
 
                 if valid_register:
-                    self.set_coil(address=address, value=val)
+                    rel = self._get_relay_config(address, reg_type)
+                    if rel is not None:
+                        rel.write_data(val)
+                    else:
+                        self.set_coil(address=address, value=val)
+                        
             elif reg_type == 'HREGS':
                 valid_register = True
                 val = list(functions.to_short(byte_array=request.data,
@@ -237,7 +257,11 @@ class Modbus(object):
 
                 if request.function in [Const.WRITE_SINGLE_REGISTER,
                                         Const.WRITE_MULTIPLE_REGISTERS]:
-                    self.set_hreg(address=address, value=val)
+                    rel = self._get_relay_config(address, reg_type)
+                    if rel is not None:
+                        rel.write_data(val)
+                    else:
+                        self.set_hreg(address=address, value=val)
             else:
                 # nothing except holding registers or coils can be set
                 request.send_exception(Const.ILLEGAL_FUNCTION)
@@ -819,6 +843,9 @@ class Modbus(object):
                            format(reg_type, self._changeable_register_types))
 
         return result
+    
+    def setup_relay_registers(self, relay) -> None:
+        self._relay = relay
 
     def setup_registers(self,
                         registers: dict = dict(),
