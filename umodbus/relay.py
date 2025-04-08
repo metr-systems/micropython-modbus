@@ -1,14 +1,9 @@
 #!/usr/bin/env python
-from .serial import Serial as ModbusRTUMaster
+from . import serial
 
 class ModbusRelay(object):
-    PINS = (25, 26)
-    BAUD = 9600
-
-    def __init__(self, pins, baud) -> None:
+    def __init__(self) -> None:
         self.RelayRegisterMapping = {}
-        ModbusRelay.BAUD = baud
-        ModbusRelay.PINS = pins
 
     def add_relay_register(self, reg_adr:int, mapping):
         self.RelayRegisterMapping[f"{mapping.reg_type}-{reg_adr}"] = mapping
@@ -26,14 +21,18 @@ class RelayRegisterMapping():
                  dev_adr: int, 
                  reg_type: str, 
                  target_register: int,
+                 pins, baud, 
                  signed: bool):
+        self.pins = pins
+        self.baud = baud
         self.dev_adr = dev_adr
         self.reg_type = reg_type
         self.target_register = target_register
         self.signed = signed
 
     def request_data(self):
-        host = ModbusRTUMaster(baudrate=ModbusRelay.BAUD, pins=ModbusRelay.PINS)
+        print("Relaying Modbus Request", self.pins, self.baud, self.dev_adr, self.target_register)
+        host = serial.Serial(baudrate=self.baud, pins=self.pins)
         val = None
         if self.reg_type == 'COILS':
             val = host.read_coils(self.dev_adr, self.target_register, 1)
@@ -46,7 +45,8 @@ class RelayRegisterMapping():
         return val
     
     def write_data(self, value):
-        host = ModbusRTUMaster(baudrate=ModbusRelay.BAUD, pins=ModbusRelay.PINS)
+        print("Relaying Modbus Request", self.pins, self.baud, self.dev_adr, self.target_register)
+        host = serial.Serial(baudrate=self.baud, pins=self.pins)
         val = False
         if self.reg_type == 'COILS':
             val = host.write_single_coil(self.dev_adr, self.target_register, value)
