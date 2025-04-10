@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from . import serial
+from machine import Pin
+
 
 class ModbusRelay(object):
     def __init__(self) -> None:
@@ -32,7 +34,7 @@ class RelayRegisterMapping():
 
     def request_data(self):
         print("Relaying Modbus Request", self.pins, self.baud, self.dev_adr, self.target_register)
-        host = serial.Serial(baudrate=self.baud, pins=self.pins)
+        host = serial.Serial(baudrate=self.baud, pins=(Pin(4), Pin(5)), uart_id=1)
         val = None
         if self.reg_type == 'COILS':
             val = host.read_coils(self.dev_adr, self.target_register, 1)
@@ -46,7 +48,7 @@ class RelayRegisterMapping():
     
     def write_data(self, value):
         print("Relaying Modbus Request", self.pins, self.baud, self.dev_adr, self.target_register)
-        host = serial.Serial(baudrate=self.baud, pins=self.pins)
+        host = serial.Serial(baudrate=self.baud, pins=(Pin(4), Pin(5)), uart_id=1)
         val = False
         if self.reg_type == 'COILS':
             val = host.write_single_coil(self.dev_adr, self.target_register, value)
