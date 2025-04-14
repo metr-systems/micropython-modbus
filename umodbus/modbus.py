@@ -843,12 +843,13 @@ class Modbus(object):
                            format(reg_type, self._changeable_register_types))
 
         return result
-    
-    def _setup_relay_registers(self, reg:int, addr:int, type:str, relay_reg:int, signed:bool, baud:int, pins) -> None:
-        if self._relay is None:
-            self._relay = relay.ModbusRelay()
-        self._relay.add_relay_register(reg, relay.RelayRegisterMapping(addr, type, relay_reg, pins, baud, signed))
 
+    def _setup_relay_registers(self, reg: int, addr: int, type: str, relay_reg: int, signed: bool) -> None:
+        self._relay.add_relay_register(reg, relay.RelayRegisterMapping(addr, type, relay_reg, signed))
+
+    def setup_relay(self, baud: int, pins, uart: int):
+        if self._relay is None:
+            self._relay = relay.ModbusRelay(baud=baud, pins=pins, uart=uart)
 
     def setup_registers(self,
                         registers: dict = dict(),
@@ -904,13 +905,7 @@ class Modbus(object):
                             r_signed = True
                             if 'relay_signed' in val:
                                 r_signed = val['relay_signed']
-                            r_pins = (6, 7)
-                            if 'relay_pins' in val:
-                                r_pins = val['relay_pins']
-                            r_baud = 19200
-                            if 'relay_baud' in val:
-                                r_baud = val['relay_baud']
-                            self._setup_relay_registers(address, val['relay_addr'], reg_type, val['relay_register'], r_signed, r_baud, r_pins)
+                            self._setup_relay_registers(address, val['relay_addr'], reg_type, val['relay_register'], r_signed)
 
                 else:
                     pass
