@@ -849,9 +849,11 @@ class Modbus(object):
     def _setup_relay_registers(self, reg: int, addr: int, type: str, relay_reg: int, signed: bool) -> None:
         self._relay.add_relay_register(reg, relay.RelayRegisterMapping(addr, type, relay_reg, signed))
 
-    def setup_relay(self, baud: int, pins, uart: int):
+    def setup_relay(self, baud: int, pins, uart: int, parity=None, databits=8, stopbits=1):
         if self._relay is None:
-            self._relay = relay.ModbusRelay(baud=baud, pins=pins, uart=uart)
+            self._relay = relay.ModbusRelay(baud=baud, pins=pins,
+                                            uart=uart, stopbits=stopbits,
+                                            databits=databits, parity=parity)
 
     def setup_registers(self,
                         registers: dict = dict(),
