@@ -52,7 +52,6 @@ class RelayRegisterMapping():
             val = host.read_discrete_inputs(self.dev_adr, self.target_register, 1)
         elif self.reg_type == 'IREGS':
             val = host.read_input_registers(self.dev_adr, self.target_register, 1, self.signed)
-        print("Received", val)
         return val
 
     def write_data(self, value):
@@ -65,5 +64,4 @@ class RelayRegisterMapping():
             val = host.write_single_coil(self.dev_adr, self.target_register, value)
         elif self.reg_type == 'HREGS':
             val = host.write_single_register(self.dev_adr, self.target_register, value, self.signed)
-        print("Received", val)
         return val

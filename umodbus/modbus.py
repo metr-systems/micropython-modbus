@@ -246,7 +246,8 @@ class Modbus(object):
                 if valid_register:
                     rel = self._get_relay_config(address, reg_type)
                     if rel is not None:
-                        rel.write_data(val)
+                        for singleval in val:
+                            rel.write_data(singleval)
                     else:
                         self.set_coil(address=address, value=val)
 
@@ -259,7 +260,8 @@ class Modbus(object):
                                         Const.WRITE_MULTIPLE_REGISTERS]:
                     rel = self._get_relay_config(address, reg_type)
                     if rel is not None:
-                        rel.write_data(val)
+                        for singleval in val:
+                            rel.write_data(singleval)
                     else:
                         self.set_hreg(address=address, value=val)
             else:
