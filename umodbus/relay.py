@@ -11,8 +11,9 @@ class ModbusRelay(object):
     STOPBITS = 1
     DATABITS = 8
     PARITY = None
+    CTRLPIN = 0
 
-    def __init__(self, baud: int, pins, uart: int, stopbits: int, databits: int, parity) -> None:
+    def __init__(self, baud: int, pins, uart: int, stopbits: int, databits: int, parity, ctrl_pin: int) -> None:
         self.RelayRegisterMapping = {}
         ModbusRelay.BAUD = baud
         ModbusRelay.UART = uart
@@ -21,6 +22,7 @@ class ModbusRelay(object):
         ModbusRelay.STOPBITS = stopbits
         ModbusRelay.DATABITS = databits
         ModbusRelay.PARITY = parity
+        ModbusRelay.CTRLPIN = ctrl_pin
 
     def add_relay_register(self, reg_adr: int, mapping):
         self.RelayRegisterMapping[f"{mapping.reg_type}-{reg_adr}"] = mapping
@@ -51,7 +53,8 @@ class RelayRegisterMapping():
             uart_id=ModbusRelay.UART,
             data_bits=ModbusRelay.DATABITS,
             stop_bits=ModbusRelay.STOPBITS,
-            parity=ModbusRelay.PARITY)
+            parity=ModbusRelay.PARITY,
+            ctrl_pin=ModbusRelay.CTRLPIN)
         val = None
         if self.reg_type == 'COILS':
             val = host.read_coils(self.dev_adr, self.target_register, 1)
@@ -70,7 +73,8 @@ class RelayRegisterMapping():
             uart_id=ModbusRelay.UART,
             data_bits=ModbusRelay.DATABITS,
             stop_bits=ModbusRelay.STOPBITS,
-            parity=ModbusRelay.PARITY)
+            parity=ModbusRelay.PARITY,
+            ctrl_pin=ModbusRelay.CTRLPIN)
         val = False
         if self.reg_type == 'COILS':
             val = host.write_single_coil(self.dev_adr, self.target_register, value)
