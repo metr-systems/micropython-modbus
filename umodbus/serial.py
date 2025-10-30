@@ -41,8 +41,8 @@ class ModbusRTU(Modbus):
     :type       parity:      Optional[int]
     :param      pins:        The pins as list [TX, RX]
     :type       pins:        List[Union[int, Pin], Union[int, Pin]]
-    :param      ctrl_pin:    The control pin
-    :type       ctrl_pin:    int
+    :param      ctrl_pins:    The control pins RE/DE
+    :type       ctrl_pins:    List[Union[int, Pin], Union[int, Pin]]
     :param      uart_id:     The ID of the used UART
     :type       uart_id:     int
     """
@@ -53,7 +53,7 @@ class ModbusRTU(Modbus):
                  stop_bits: int = 1,
                  parity: Optional[int] = None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
-                 ctrl_pin: int = None,
+                 ctrl_pins: List[Union[int, Pin], Union[int, Pin]] = None,
                  uart_id: int = 1):
         super().__init__(
             # set itf to Serial object, addr_list to [addr]
@@ -63,7 +63,7 @@ class ModbusRTU(Modbus):
                    stop_bits=stop_bits,
                    parity=parity,
                    pins=pins,
-                   ctrl_pin=ctrl_pin),
+                   ctrl_pins=ctrl_pins),
             [addr]
         )
 
@@ -76,7 +76,7 @@ class Serial(CommonModbusFunctions):
                  stop_bits: int = 1,
                  parity=None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
-                 ctrl_pin: int = None):
+                 ctrl_pins: List[Union[int, Pin], Union[int, Pin]] = None):
         """
         Setup Serial/RTU Modbus
 
@@ -92,8 +92,8 @@ class Serial(CommonModbusFunctions):
         :type       parity:      Optional[int]
         :param      pins:        The pins as list [TX, RX]
         :type       pins:        List[Union[int, Pin], Union[int, Pin]]
-        :param      ctrl_pin:    The control pin
-        :type       ctrl_pin:    int
+        :param      ctrl_pins:   The control pin pair RE/DE
+        :type       ctrl_pins:   List[Union[int, Pin], Union[int, Pin]]
         """
         # UART flush function is introduced in Micropython v1.20.0
         self._has_uart_flush = callable(getattr(UART, "flush", None))
@@ -108,10 +108,12 @@ class Serial(CommonModbusFunctions):
                           rx=pins[1]
                           )
 
-        if ctrl_pin is not None:
-            self._ctrlPin = Pin(ctrl_pin, mode=Pin.OUT)
+        if ctrl_pins is not None:
+            self._ctrlPin = ctrl_pins[0]
+            self._ctrlPinRE = ctrl_pins[1]
         else:
             self._ctrlPin = None
+            self._ctrlPinRE = None
 
         # timing of 1 character in microseconds (us)
         self._t1char = (1000000 * (data_bits + stop_bits + 2)) // baudrate
@@ -257,8 +259,9 @@ class Serial(CommonModbusFunctions):
         modbus_adu.extend(modbus_pdu)
         modbus_adu.extend(self._calculate_crc16(modbus_adu))
 
-        if self._ctrlPin:
+        if self._ctrlPin and self._ctrlPinRE:
             self._ctrlPin.on()
+            self._ctrlPinRE.on()
             # wait until the control pin really changed
             # 85-95us (ESP32 @ 160/240MHz)
             time.sleep_us(200)
@@ -286,8 +289,9 @@ class Serial(CommonModbusFunctions):
             )
             time.sleep_us(sleep_time_us)
 
-        if self._ctrlPin:
+        if self._ctrlPin and self._ctrlPinRE:
             self._ctrlPin.off()
+            self._ctrlPinRE.off()
 
     def _send_receive(self,
                       modbus_pdu: bytes,
