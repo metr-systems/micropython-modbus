@@ -248,8 +248,7 @@ class Modbus(object):
                     if rel is not None:
                         for singleval in val:
                             rel.write_data(singleval)
-                    else:
-                        self.set_coil(address=address, value=val)
+                    self.set_coil(address=address, value=val)
 
             elif reg_type == 'HREGS':
                 valid_register = True
@@ -262,8 +261,8 @@ class Modbus(object):
                     if rel is not None:
                         for singleval in val:
                             rel.write_data(singleval)
-                    else:
-                        self.set_hreg(address=address, value=val)
+                    # Set HREG in any case
+                    self.set_hreg(address=address, value=val)
             else:
                 # nothing except holding registers or coils can be set
                 request.send_exception(Const.ILLEGAL_FUNCTION)
