@@ -56,7 +56,7 @@ class RelayRegisterMapping():
             data_bits=ModbusRelay.DATABITS,
             stop_bits=ModbusRelay.STOPBITS,
             parity=ModbusRelay.PARITY,
-            ctrl_pins=(Pin(ModbusRelay.CTRLPIN), Pin(ModbusRelay.CTRLPINRE)))
+            ctrl_pins=(Pin(ModbusRelay.CTRLPIN, Pin.OUT), Pin(ModbusRelay.CTRLPINRE, Pin.OUT)))
         val = None
         if self.reg_type == 'COILS':
             val = host.read_coils(self.dev_adr, self.target_register, 1)
@@ -76,7 +76,7 @@ class RelayRegisterMapping():
             data_bits=ModbusRelay.DATABITS,
             stop_bits=ModbusRelay.STOPBITS,
             parity=ModbusRelay.PARITY,
-            ctrl_pins=(Pin(ModbusRelay.CTRLPIN), Pin(ModbusRelay.CTRLPINRE)))
+            ctrl_pins=(Pin(ModbusRelay.CTRLPIN, Pin.OUT), Pin(ModbusRelay.CTRLPINRE, Pin.OUT)))
         val = False
         if self.reg_type == 'COILS':
             val = host.write_single_coil(self.dev_adr, self.target_register, value)
